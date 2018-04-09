@@ -73,8 +73,8 @@ final class Storage {
     temporaryDataContext.parent = mainContext
   }
   
-  func fetchData(for username: String, completion: @escaping (_ moreDataAvailable: Bool, _ rowsFetched: Int, _ error: Any?) -> Void) {
-    GetUserReposRequest.fire(username: username, pageToLoad: page, completion: { data, error in
+  func fetchData(for userName: String, completion: @escaping (_ moreDataAvailable: Bool, _ rowsFetched: Int, _ error: Any?) -> Void) {
+    GetUserReposRequest.fire(userName: userName, pageToLoad: page, completion: { data, error in
       if error != nil {
         completion(false, 0, error)
       } else {
@@ -213,18 +213,21 @@ final class Storage {
     }
   }
   
-  private func setRepoEntityAttributes<repoEntity: NSManagedObject>(entity: repoEntity, _ id: NSNumber, _ name: String,_ starsAmount: NSNumber, _ repositoryDescription: String, _ language: String, _ fullName: String) {
-    entity.setValue(id, forKey: Constants.RepoEntityAttributes.githubId)
-    entity.setValue(name, forKey: Constants.RepoEntityAttributes.name)
-    entity.setValue(starsAmount, forKey: Constants.RepoEntityAttributes.starsAmount)
-    entity.setValue(repositoryDescription, forKey: Constants.RepoEntityAttributes.repositoryDescription)
-    entity.setValue(language, forKey: Constants.RepoEntityAttributes.language)
-    entity.setValue(fullName, forKey: Constants.RepoEntityAttributes.fullName)
+  private func setRepoEntityAttributes(entity: RepositoryData, _ id: NSNumber, _ name: String,_ starsAmount: NSNumber, _ repositoryDescription: String, _ language: String, _ fullName: String) {
+    if let objectToChange = entity as? NSManagedObject {
+      objectToChange.setValue(id, forKey: Constants.RepoEntityAttributes.githubId)
+      objectToChange.setValue(name, forKey: Constants.RepoEntityAttributes.name)
+      objectToChange.setValue(starsAmount, forKey: Constants.RepoEntityAttributes.starsAmount)
+      objectToChange.setValue(repositoryDescription, forKey: Constants.RepoEntityAttributes.repositoryDescription)
+      objectToChange.setValue(language, forKey: Constants.RepoEntityAttributes.language)
+      objectToChange.setValue(fullName, forKey: Constants.RepoEntityAttributes.fullName)
+    }
   }
   
   func addToFavorites(_ data: TempRepositoryEntity) {
     let favoriteRepoEntityDesc = NSEntityDescription.entity(forEntityName: Constants.EntityNames.favoriteRepositoryEntity, in: mainContext)
-    let newFavorityRepo = NSManagedObject.init(entity: favoriteRepoEntityDesc!, insertInto: mainContext)
+    
+    guard let newFavorityRepo = NSManagedObject.init(entity: favoriteRepoEntityDesc!, insertInto: mainContext) as? RepositoryData else { return }
     
     guard let name = data.name,
           let language = data.language,

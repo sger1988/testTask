@@ -13,6 +13,11 @@ class UserSearchController: UIViewController {
   @IBOutlet weak var userSearchTable: UITableView!
   private var searchBar = UISearchBar()
   private var shouldRequestMoreData = true
+  private var userName: String = "" {
+    didSet {
+      shouldRequestMoreData = false
+    }
+  }
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -31,38 +36,22 @@ class UserSearchController: UIViewController {
   }
   
   private func requestData() {
-    guard let searchString = searchBar.text?.lowercased() else { return }
+    guard let searchString = searchBar.text?.lowercased(), searchBar.text != "" else { return }
+    guard userNameValid(searchString) else { showSimpleAlert(text: Constants.Messages.invalidUserName); return }
+    userName = searchString
     
-    switch isUserNameValid(searchString) {
-    case true:
-      break
-    case false:
-      let validationErrorAlert = UIAlertController(title: nil, message: Constants.Messages.invalidUsername, preferredStyle: .alert)
-      let okAction = UIAlertAction(title: Constants.Messages.ok, style: .default, handler: nil)
-      validationErrorAlert.addAction(okAction)
-      self.present(validationErrorAlert, animated: true, completion: nil)
-      
-      return
-    }
     UIApplication.shared.isNetworkActivityIndicatorVisible = true
-    Storage.shared.fetchData(for: searchString) { moreDataAvailable, rowsFetched, error in
-      
+    
+    Storage.shared.fetchData(for: userName) { moreDataAvailable, rowsFetched, error in
       self.shouldRequestMoreData = moreDataAvailable
+      
       if let fetchError = error as? Error {
-        let errorAlert = UIAlertController(title: Constants.Messages.errorTitle, message: fetchError.localizedDescription, preferredStyle: UIAlertControllerStyle.alert)
-        let okAction = UIAlertAction(title: Constants.Messages.ok, style: UIAlertActionStyle.default, handler: nil)
-        errorAlert.addAction(okAction)
-        
-        self.present(errorAlert, animated: true, completion: nil)
+        self.showSimpleAlert(text: fetchError.localizedDescription)
         UIApplication.shared.isNetworkActivityIndicatorVisible = false
         
         return
       } else if let message = error as? String {
-        let errorAlert = UIAlertController(title: nil, message: message, preferredStyle: UIAlertControllerStyle.alert)
-        let okAction = UIAlertAction(title: Constants.Messages.ok, style: UIAlertActionStyle.default, handler: nil)
-        errorAlert.addAction(okAction)
-        
-        self.present(errorAlert, animated: true, completion: nil)
+        self.showSimpleAlert(text: message)
         UIApplication.shared.isNetworkActivityIndicatorVisible = false
         
         return
@@ -76,10 +65,18 @@ class UserSearchController: UIViewController {
     }
   }
   
-  private func isUserNameValid(_ username: String) -> Bool {
-    let usernameRegex = Constants.usernameRegex
+  private func userNameValid(_ userName: String) -> Bool {
+    let usernameRegex = Constants.userNameRegex
     let predicate = NSPredicate(format:"SELF MATCHES %@", usernameRegex)
-    return predicate.evaluate(with: username)
+    return predicate.evaluate(with: userName)
+  }
+  
+  private func showSimpleAlert(text: String) {
+    let errorAlert = UIAlertController(title: Constants.Messages.errorTitle, message: text, preferredStyle: UIAlertControllerStyle.alert)
+    let okAction = UIAlertAction(title: Constants.Messages.ok, style: .default, handler: nil)
+    errorAlert.addAction(okAction)
+    
+    self.present(errorAlert, animated: true, completion: nil)
   }
   
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -109,6 +106,7 @@ extension UserSearchController: UISearchBarDelegate {
     UIApplication.shared.isNetworkActivityIndicatorVisible = false
     searchBar.endEditing(true)
     searchBar.text = ""
+    userName = ""
     shouldRequestMoreData = false
     Storage.shared.clearTempContext()
     userSearchTable.reloadData()

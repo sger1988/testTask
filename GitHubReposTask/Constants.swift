@@ -65,7 +65,7 @@ final class Constants {
     static let ok               = "Ok"
     static let noRecords        = "No records for user"
     static let erorrResponse    = "Error processing request"
-    static let invalidUsername  = "Entered username is invalid, try another"
+    static let invalidUserName  = "Entered user name is invalid, try another"
     static let modelLoadError   = "Error loading model from bundle"
     static let errorMomInit     = "Error initializing mom from: "
     static let errorDocumentDir = "Unable to resolve document directory"
@@ -76,6 +76,6 @@ final class Constants {
   static let searchBarPlaceholder = "Enter user name"
   static let modelName            = "UserRepositoryModel"
   static let pageSize             = 10
-  static let usernameRegex        = "^[a-z\\d](?:[a-z\\d]|-(?=[a-z\\d])){0,38}$"
+  static let userNameRegex        = "^[a-z\\d](?:[a-z\\d]|-(?=[a-z\\d])){0,38}$"
   
 }

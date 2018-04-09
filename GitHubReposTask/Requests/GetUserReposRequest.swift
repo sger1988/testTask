@@ -10,10 +10,10 @@ import Foundation
 
 class GetUserReposRequest {
   
-  static func fire(username: String, pageToLoad: Int = 1, completion: @escaping (_ data: Data?, _ error: Any?) -> Void) {
+  static func fire(userName: String, pageToLoad: Int = 1, completion: @escaping (_ data: Data?, _ error: Any?) -> Void) {
     let sessionConfig = URLSessionConfiguration.default
     let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-    guard var URL = URL(string: Constants.RequestStrings.URL.source + Constants.RequestStrings.URL.users + username + Constants.RequestStrings.URL.repositiries) else { return }
+    guard var URL = URL(string: Constants.RequestStrings.URL.source + Constants.RequestStrings.URL.users + userName + Constants.RequestStrings.URL.repositiries) else { return }
     let URLParams = [
       Constants.RequestStrings.Params.perPage: String(Constants.pageSize),
       Constants.RequestStrings.Params.page   : String(pageToLoad),
@@ -28,7 +28,7 @@ class GetUserReposRequest {
         let statusCode = (response as! HTTPURLResponse).statusCode
         
         switch statusCode {
-        case 400...599:
+        case 300...599:
           completion(receivedData, Constants.Messages.erorrResponse)
         default:
           completion(receivedData, nil)
